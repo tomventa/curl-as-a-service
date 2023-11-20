@@ -45,6 +45,14 @@ def resolve_ip(input: str) -> str | None:
 
 
 def detect_ssrf(url: str) -> bool:
+    """Detect if the given URL has an host that points to a private IP address.
+
+    Args:
+        url (str): The URL to check.
+
+    Returns:
+        bool: True if the URL has an host that points to a private IP address, False otherwise.
+    """
     # Parse the URL and get the domain
     try:
         parsed_url = urlparse(url)

@@ -10,6 +10,7 @@ import requests
 from app.utils import url_info, make_request
 from app.database import get_db
 from pymongo.collection import Collection
+from app.models.shared import JSONException
 
 
 router = APIRouter(prefix="/api/HTTP", tags=["http"])
@@ -27,7 +28,7 @@ def perform_a_request(URL: ServerSideURL, method: str, request: Request, db = De
     # 
     new_record = RequestModel(**response_and_request | {'_id': str(uuid4())})
     result_collection: Collection[RequestModel] = db.results
-    result_collection.insert_one(new_record.dict(by_alias=True))
+    result_collection.insert_one(new_record.model_dump(by_alias=True))
     return new_record
 
 @router.get("/{id}", response_model=RequestModel)
@@ -35,5 +36,6 @@ def view_a_request(id: UUID4, db = Depends(get_db)):
     result_collection: Collection[RequestModel] = db.results
     result = result_collection.find_one({'_id': str(id)})
     if result is None:
-        raise HTTPException(status_code=404, detail="Request not found")
+        #raise HTTPException(status_code=404, detail="Request not found")
+        raise JSONException(id='ID_NOT_FOUND', detail='The requested UUID was not found in the database')
     return RequestModel(**result)

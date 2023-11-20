@@ -151,18 +151,6 @@ def test_api_google_mock_302_single_redirect_ssrf(client):
                     "Location": "https://second.google.com"
                 }
                 return mock_response
-            elif args[1] == "https://second.google.com":
-                mock_response = mock.MagicMock()
-                mock_response.status_code = 200
-                mock_response.is_redirect = False
-                mock_response.raw.version = 11
-                mock_response.headers = {
-                    "Content-Type": "text/html",
-                    "Content-Length": "123",
-                    "Date": "Mon, 18 Oct 2021 14:00:01 GMT",
-                    "Server": "Nginx 1.2",
-                }
-                return mock_response
 
 
         mock_gethostbyname.side_effect = mocked_get_host_by_name
@@ -218,3 +206,11 @@ def test_add_view(client):
         assert response.json()["status"] == 200
         assert response.json()["_id"] == id
         assert response.json()["data"]["response"][0]["headers"]["Server"] == "Apache 19/1.2"
+
+def test_add_view_not_found(client):
+    response = client.get(
+        f"/api/HTTP/025cc803-cfe4-42c0-bc8c-e47dfa20c8ee",
+    )
+    assert response.status_code == 500
+    assert response.json()["status"] == 500
+    assert response.json()["errors"]["id"] == "ID_NOT_FOUND"
