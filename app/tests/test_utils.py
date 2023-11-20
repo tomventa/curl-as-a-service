@@ -1,0 +1,99 @@
+import pytest
+from unittest import mock
+from app.utils import url_info, detect_ssrf, resolve_ip, make_request
+from app.models.shared import JSONException
+
+def test_url_info():
+    assert url_info("https://www.google.com/test") == {
+        "url": "https://www.google.com/test",
+        "protocol": "https",
+        "domain": "www.google.com",
+        "path": "/test"
+    }
+
+    with pytest.raises(JSONException):
+        url_info("http://[2001::2/124]/]")
+
+
+def test_resolve_ip():
+    with pytest.raises(JSONException):
+        resolve_ip("this.does.not.exists@")
+
+    with mock.patch('app.utils.socket') as mock_socket:
+        # Mock the gethostbyname function to return a valid IP address
+        mock_socket.gethostbyname.return_value = '192.168.0.1'
+
+        # Test with a valid IP address input
+        assert resolve_ip('192.168.0.1') == '192.168.0.1'
+        
+        # Test with a valid domain input
+        assert resolve_ip('example.com') == '192.168.0.1'
+
+
+def test_detect_ssrf():
+    with mock.patch('app.utils.socket') as mock_socket:
+        # Url is a local IP address
+        mock_socket.gethostbyname.return_value = '127.0.0.1'
+        assert detect_ssrf('http://example.com') == True
+        
+        # Url is not a local IP address
+        mock_socket.gethostbyname.return_value = '123.123.123.123'
+        assert detect_ssrf('http://example.com') == False
+
+
+@pytest.mark.parametrize("ssrf_cases", [
+        "127.0.0.1", 
+        "127.1.2.3", 
+        "255.255.255.1", 
+        "192.168.1.1"
+        "0", "::", "0.0.0.0", "::1",
+        "0:0:0:0:0:FFFF:7F00:0001",
+    ])
+def test_detect_ssrf_true(ssrf_cases):
+    with mock.patch('app.utils.socket') as mock_socket:
+        mock_socket.gethostbyname.return_value = ssrf_cases
+        assert detect_ssrf('http://example.com') == True
+
+
+@pytest.mark.parametrize("ssrf_cases", [
+        "54.0.1.2",
+        "123.1.2.3",
+        "8.8.8.8"
+    ])
+def test_detect_ssrf_false(ssrf_cases):
+    with mock.patch('app.utils.socket') as mock_socket:
+        mock_socket.gethostbyname.return_value = ssrf_cases
+        assert detect_ssrf('http://example.com') == False
+
+
+def test_make_request():
+    with mock.patch('app.utils.detect_ssrf') as mock_detect_ssrf, \
+         mock.patch('app.utils.requests') as mock_requests:
+        mock_detect_ssrf.return_value = False
+
+        mock_response = mock.MagicMock()
+        mock_response.status_code = 200
+        mock_response.is_redirect = False
+        mock_response.raw.version = 11
+
+        mock_requests.request.return_value = mock_response
+
+        assert make_request('http://example.com', 'GET') == {
+            'status': 200,
+            'errors': None,
+            'data': {
+                'response': [
+                    {
+                        'http_version': 'HTTP/1.1',
+                        'status_code': 200,
+                        'headers': {}
+                    }
+                ],
+                'request': [
+                    {
+                        'method': 'GET',
+                        'url': 'http://example.com'
+                    }
+                ]
+            }
+        }
