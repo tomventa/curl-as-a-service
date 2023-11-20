@@ -178,3 +178,43 @@ def test_api_google_mock_302_single_redirect_ssrf(client):
         assert response.json()["status"] == 500
         assert response.json()["errors"] is not None
         assert response.json()["errors"]["id"] == "SSRF_DETECTED"
+
+
+def test_add_view(client):
+    with mock.patch('app.utils.detect_ssrf') as mock_detect_ssrf, \
+         mock.patch('app.utils.requests') as mock_requests:
+        mock_detect_ssrf.return_value = False
+
+        mock_response = mock.MagicMock()
+        mock_response.status_code = 200
+        mock_response.is_redirect = False
+        mock_response.raw.version = 11
+        mock_response.headers = {
+            "Content-Type": "text/html",
+            "Content-Length": "123",
+            "Date": "Mon, 18 Oct 2021 14:00:00 GMT",
+            "Server": "Apache 19/1.2",
+        }
+
+        mock_requests.request.return_value = mock_response
+
+        response = client.post(
+            "/api/HTTP/GET",
+            json={
+                "url": "https://www.google.it/"
+            }
+        )
+        assert response.json()["status"] == 200
+        assert response.json()["data"]["response"][0]["status_code"] == 200
+        assert len(response.json()["_id"]) > 5
+
+        id = response.json()["_id"]
+
+        # View the request
+        response = client.get(
+            f"/api/HTTP/{id}",
+        )
+
+        assert response.json()["status"] == 200
+        assert response.json()["_id"] == id
+        assert response.json()["data"]["response"][0]["headers"]["Server"] == "Apache 19/1.2"
