@@ -4,6 +4,12 @@
 
 Curl-as-a-Service is a web application that allows users to create HTTP requests and analyze the responses, providing information on URL analysis. The application saves all requests and their corresponding responses in a database, and the data can be browsed through a page that takes the request ID from the URL.
 
+
+<img src="./docs/coverage.png" alt="Screen" width="700"/>
+
+
+<img src="./docs/screen_web.png" alt="Screen" width="700"/>
+
 ## Getting Started
 
 1) ### Install the Required Software

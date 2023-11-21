@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -7,15 +8,22 @@
     <meta name="author" content="Tommaso Ventafridda">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="/surreal.js"></script>
+    <link rel="stylesheet" href="/search.css">
 </head>
-
 <body>
     <form>
         <!-- Dropdown menu with method (post, get, info, DUMB) -->
         <select name="method" disabled="disabled">
-            <option value="post">POST</option>
             <option value="get">GET</option>
+            <option value="post">POST</option>
             <option value="info">INFO</option>
+            <option value="head">HEAD</option>
+            <option value="options">OPTIONS</option>
+            <option value="put">PUT</option>
+            <option value="delete">DELETE</option>
+            <option value="trace">TRACE</option>
+            <option value="connect">CONNECT</option>
+            <option value="patch">PATCH</option>
             <option value="dumb">DUMB</option>
         </select>
         <!-- Input field with url -->
@@ -24,9 +32,9 @@
 
 
     <!-- Results -->
-    <div>
+    <div class="results" id="results">
         <!-- URL INFO -->
-        <div>
+        <div class="response urlinfo">
             <b>URL INFO</b>
             <div>
                 <b>DOMAIN</b>
@@ -41,14 +49,18 @@
                 <p id="info_path"></p>
             </div>
         </div>
-        <!-- Results -->
-        <div id="results">
-        </div>
     </div>
 
-    <div>
-        <h1>Share</h1>
-        <p id="sharelink"></p>
+    <div class="footer">
+        <h3>Share</h3>
+        <p id="sharelink">
+            
+        </p>
+        <script>
+            me().click(ev => {
+                console.log('copied')
+            })
+        </script>
     </div>
 
 
@@ -95,18 +107,17 @@
             for (let i = 0; i < data.data.response.length; i++) {
                 let response = data.data.response[i];
                 let div = document.createElement("div");
-                let httpversion = response.status_code;
+                div.className = "response";
+                let httpversion = response.http_version + " " + response.status_code;
                 let headers = "";
                 // iterate a dictionary in javascript
                 for (let key in response.headers) {
-                    headers += `<p><b>${key}</b>: ${response.headers[key]}</p>`;
+                    headers += `<div><p><b>${key}</b>: ${response.headers[key]}</p></div>`;
                 }
                 div.innerHTML = `
                     <b>Response ${i+1}</b>
-                    <div>
-                        <p>${httpversion}</p>
-                        ${headers}
-                    </div>
+                    <div><p>${httpversion}</p></div>
+                    ${headers}
                 `;
                 me("#results").appendChild(div);
             }
