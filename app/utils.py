@@ -126,7 +126,10 @@ def make_request(
     try:
         response = requests.request(method, url, allow_redirects=False, timeout=10)
     except Exception as e:
-        return JSONException(id='REQUEST_EXCEPTION', detail=f'Generic request exception: {e}')
+        raise JSONException(
+                id='REQUEST_EXCEPTION',
+                detail=f'Generic request exception: {e}'
+            ) from e
 
     # If the response is a redirect and the redirect counter is greater than 5, return an error
     if response.is_redirect and redirect_count >= 10:

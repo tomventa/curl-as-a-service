@@ -1,9 +1,84 @@
 <html>
     <head>
-        <title>Test</title>
+        <meta charset="utf-8">
+        <title>Curl-as-a-Service</title>
+        <meta name="description" content="Curl-as-a-Service">
+        <meta name="author" content="Tommaso Ventafridda">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="/surreal.js"></script>
     </head>
     <body>
-        <h1>Test</h1>
-        <p>Test</p>
+        <header>
+            <h1>200</h1>
+            <h2>Everything is fine</h2>
+        </header>
+        
+        <form>
+            <!-- Dropdown menu with method (post, get, info, DUMB) -->
+            <select name="method">
+                <option value="post">POST</option>
+                <option value="get">GET</option>
+                <option value="info">INFO</option>
+                <option value="dumb">DUMB</option>
+            </select>
+            <!-- Input field with url -->
+            <input type="text" name="url" placeholder="URL">
+            <!-- Submit button -->
+            <button type="Submit">
+                Send
+            </button>
+        </form>
+        
+
+        <!-- Results -->
+        <div>
+            <!-- URL INFO -->
+            <div>
+                <b>URL INFO</b>
+                
+            </div>
+            <!-- Results -->
+            <div>
+                <b>Response</b>
+            </div>
+        </div>
+
+
+
+        <script>
+            async function sendRequest(method, url) {
+                let response = await fetch(`http://localhost/api/HTTP/${method}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                    })
+                })
+                let data = await response.json()
+                return data
+            }
+
+
+            me("button").on("click", ev => {
+                ev.preventDefault()
+                let method = me("select[name=method]").value;
+                let url = me("input[name=url]").value;
+
+                // do a api call using fetch
+                sendRequest(method, url).then(data => {
+                    if ("_id" in data) {
+                        // redirect to the new page
+                        window.location.href = `/${data._id}`;
+                    } else if (data["status"] != 200) {
+                        // 
+                        me("header h1").innerText = data["status"];
+                        me("header h2").innerText = data["errors"]["detail"];
+                        console.log(data)
+                    }
+                })
+            })
+        </script>
     </body>
 </html>

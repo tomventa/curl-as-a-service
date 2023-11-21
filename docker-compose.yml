@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
     ports:
       - 80:80
-    #volumes:
-    #  - ./web/nginx.conf:/etc/nginx/conf.d/nginx.conf
+    volumes:
+      - ./web/html:/usr/share/nginx/html
     depends_on:
       - server

@@ -1,8 +1,119 @@
 <html>
-    <head>
-        <title>HEHEHEHE</title>
-    </head>
-    <body>
-        <h1>HEHEEHEH</h1>
-    </body>
+
+<head>
+    <meta charset="utf-8">
+    <title>Curl-as-a-Service</title>
+    <meta name="description" content="Curl-as-a-Service">
+    <meta name="author" content="Tommaso Ventafridda">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/surreal.js"></script>
+</head>
+
+<body>
+    <form>
+        <!-- Dropdown menu with method (post, get, info, DUMB) -->
+        <select name="method" disabled="disabled">
+            <option value="post">POST</option>
+            <option value="get">GET</option>
+            <option value="info">INFO</option>
+            <option value="dumb">DUMB</option>
+        </select>
+        <!-- Input field with url -->
+        <input type="text" name="url" placeholder="URL" disabled="disabled">
+    </form>
+
+
+    <!-- Results -->
+    <div>
+        <!-- URL INFO -->
+        <div>
+            <b>URL INFO</b>
+            <div>
+                <b>DOMAIN</b>
+                <p id="info_domain"></p>
+            </div>
+            <div>
+                <b>SCHEME</b>
+                <p id="info_schema"></p>
+            </div>
+            <div>
+                <b>PATH</b>
+                <p id="info_path"></p>
+            </div>
+        </div>
+        <!-- Results -->
+        <div id="results">
+        </div>
+    </div>
+
+    <div>
+        <h1>Share</h1>
+        <p id="sharelink"></p>
+    </div>
+
+
+
+    <script>
+        // on page loaded
+        window.addEventListener("load", ev => {
+            // get the id from the url
+            let id = window.location.pathname.split("/")[1];
+            // do a api call using fetch
+            sendRequest(id).then(data => {
+                // Redirect to the homepage if not found
+                if(("_id" in data)==false) {
+                    window.location.href = "/";
+                }
+                // Otherwise render the page
+                renderData(data);
+            });
+        })
+
+
+        async function sendRequest(id) {
+            let response = await fetch(`http://localhost/api/HTTP/${id}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            let data = await response.json()
+            return data
+        }
+
+
+        function renderData(data) {
+            console.log(data)
+            // render the url info
+            me("#info_domain").innerText = (data.data.url.domain);
+            me("#info_schema").innerText = (data.data.url.protocol);
+            me("#info_path").innerText = (data.data.url.path);
+            // render the input field
+            me("input[name=url]").value = data.data.url.url;
+            me("select[name=method]").value = data.data.request[0].method;
+            // render the responses
+            for (let i = 0; i < data.data.response.length; i++) {
+                let response = data.data.response[i];
+                let div = document.createElement("div");
+                let httpversion = response.status_code;
+                let headers = "";
+                // iterate a dictionary in javascript
+                for (let key in response.headers) {
+                    headers += `<p><b>${key}</b>: ${response.headers[key]}</p>`;
+                }
+                div.innerHTML = `
+                    <b>Response ${i+1}</b>
+                    <div>
+                        <p>${httpversion}</p>
+                        ${headers}
+                    </div>
+                `;
+                me("#results").appendChild(div);
+            }
+            // render the current page url
+            me("#sharelink").innerText = window.location.href;
+        }
+    </script>
+</body>
+
 </html>
