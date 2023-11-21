@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Depends, Request, Query
-from fastapi.exceptions import HTTPException
-from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+"""
+    The starting point of the application.
+"""
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from .routers import http
 from .models.shared import JSONException
 from .models.api import HTTPResponse
@@ -23,7 +23,16 @@ app.include_router(http.router)
 
 
 @app.exception_handler(JSONException)
-async def unicorn_exception_handler(request: Request, exc: JSONException):
+async def custom_exception_handler(_: Request, exc: JSONException) -> JSONResponse:
+    """Handle exceptions for the /api/HTTP endpoint logic
+
+    Args:
+        request (Request): The request object.
+        exc (JSONException): The exception to handle.
+
+    Returns:
+        JSONResponse: JSON response with the exception details.
+    """
     ret = HTTPResponse(
         status = 500,
         errors = {

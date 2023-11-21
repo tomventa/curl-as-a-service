@@ -1,11 +1,12 @@
-import pytest
+"""This module contains fixtures that are used across multiple test files."""
+
 from typing import Generator, Any
+import secrets
+import pytest
 from fastapi.testclient import TestClient
-from fastapi import FastAPI
+from pymongo.database import Database
 from ..main import app
 from .. import database
-import secrets
-from pymongo.database import Database
 
 
 # https://www.fastapitutorial.com/blog/unit-testing-in-fastapi/
@@ -19,8 +20,8 @@ def test_db() -> Generator[Database, Any, None]:
     """
     #test db creation
     test_db_name = "pytest-" + secrets.token_hex(16)
-    test_db = database.client[test_db_name]
-    yield test_db
+    temp_db = database.client[test_db_name]
+    yield temp_db
     #test db cleanup
     database.client.drop_database(test_db_name)
 
@@ -40,5 +41,5 @@ def client(
         return test_db
 
     app.dependency_overrides[database.get_db] = _get_test_db
-    with TestClient(app) as client:
-        yield client
+    with TestClient(app) as test_client:
+        yield test_client
