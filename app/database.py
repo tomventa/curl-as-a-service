@@ -1,8 +1,6 @@
+import os
 from pymongo.collection import Collection
 from pymongo import MongoClient
-from fastapi.logger import logger
-import os
-import secrets
 
 # Configuration used to connect to MongoDB
 config = {

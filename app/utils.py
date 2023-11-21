@@ -1,8 +1,17 @@
-from fastapi import HTTPException
-from urllib.parse import urlparse
+"""
+This module contains utility functions used by the API.
+
+Functions:
+    url_info: Decompose an URL into its components.
+    resolve_ip: Resolve the given input to an IP address.
+    detect_ssrf: Detect if the given URL has an host that points to a private IP address.
+    make_request: Make a HTTP request to the given URL, follow redirects and return the responses.
+"""
+
+import socket
 import requests
 import ipaddress
-import socket
+from urllib.parse import urlparse
 from app.models.shared import JSONException
 
 def url_info(url: str) -> dict[str, str]:
@@ -30,7 +39,18 @@ def url_info(url: str) -> dict[str, str]:
         "path": parsed_url.path
     }
 
-def resolve_ip(input: str) -> str | None:
+def resolve_ip(input: str) -> str:
+    """Resolve the given input to an IP address.
+
+    Args:
+        input (str): Domain/host/IP to resolve
+
+    Raises:
+        JSONException: If the domain is pointing to an invalid IP address.
+
+    Returns:
+        str: The resolved IP address.
+    """
     # If the input is an IP, return it
     try:
         ip_object = ipaddress.ip_address(input)
@@ -40,7 +60,10 @@ def resolve_ip(input: str) -> str | None:
         try:
             return socket.gethostbyname(input)
         except socket.gaierror:
-            raise JSONException(id='INVALID_DOMAIN_RECORD', detail='The domain url is pointing to an invalid IP address')
+            raise JSONException(
+                id='INVALID_DOMAIN_RECORD', 
+                detail='The domain url is pointing to an invalid IP address'
+            )
         
 
 
