@@ -33,7 +33,7 @@ Curl-as-a-Service is a web application that allows users to create HTTP requests
    ```bash
    docker compose up -d
    ```
-   This command starts the application in the background. To view the logs, run:
+   This command starts the application in the background. The webapp is available at http://localhost:80. To view the logs, run:
    ```bash
    docker compose logs -f
    ```
