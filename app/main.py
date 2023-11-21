@@ -33,6 +33,3 @@ async def unicorn_exception_handler(request: Request, exc: JSONException):
         data = None
     )
     return JSONResponse(status_code=500, content=ret.model_dump(by_alias=True))
-
-# Serve static files
-app.mount('/', StaticFiles(directory='app/static/'), name='static')
